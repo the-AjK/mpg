@@ -1,6 +1,6 @@
 mpg - Maaperture Parser Generator
 -------------
-Copyright (c) 2014, Alberto Garbui (aka JK) www.ajk.altervista.com
+Copyright (c) 2014, Alberto Garbui (aka JK) www.ajk.altervista.org
 
 All rights reserved.
 
