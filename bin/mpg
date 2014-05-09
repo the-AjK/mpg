@@ -1,0 +1,141 @@
+#!/usr/bin/env node
+
+'use strict';
+
+var fs = require('fs');     
+var PEG = require('pegjs'); 
+var program = require('commander');
+var config = require(__dirname + '/../config');
+var version = JSON.parse(fs.readFileSync(__dirname + '/../package.json', 'utf8')).version;
+var name = "mpg v" + version;
+var description = "Maaperture parser generator - Alberto Garbui (aka JK)";
+
+function printHelpTitle() {
+	console.log('');
+	console.log('  -------------------------------------------------------');
+	console.log('   ' + name);
+	console.log('');
+	console.log('   ' + description);
+	console.log('  -------------------------------------------------------');
+}
+
+var generateParser = function(grammar_file, output_parser_file) {
+	
+	var grammaticaDSL = fs.readFileSync(grammar_file).toString();
+	
+	var parser = PEG.buildParser(grammaticaDSL, { 					//grammar (string)
+								 output: 'source', //"config.pegjs.output,		//output type
+								 optimize: 'speed' //'config.pegjs.optimize,	//optimization type
+								});	
+								
+	parser = "module.exports = " + parser + ";";
+	
+	var result;
+	try{
+		result = fs.writeFileSync(output_parser_file, parser, 'utf-8');
+	}catch(err){
+		result = false;
+	}
+	
+	if(result){
+		return false;
+	}else{
+		return true;
+	}
+}
+
+function testParser(parser_file, dsl_file, output_file) {
+
+	var parserTest = require(parser_file);
+	var DSLstring = fs.readFileSync(dsl_file).toString();
+	var result = parserTest.parse(DSLstring);
+	var result;
+	try{
+		result = fs.writeFileSync(output_file, result, 'utf-8');
+	}catch(err){
+		result = false;
+	}
+	
+	if(result){
+		return false;
+	}else{
+		return true;
+	}
+
+	//console.log("Controllo se il risultato e' in formato JSON...");
+	//provo ad eseguire il parser JSON per controllare se l'output è in formato JSON
+	//var risultatoJSON = JSON.parse(result);
+	//console.log(risultatoJSON.pretty());
+}
+
+program
+	.version(version)
+	.usage('<command> [options]')
+	.option('-G, --grammar <grammar_file>', 'specify the input grammar')
+	.option('-P, --parser <parser_file>', 'specify the parser file to test')
+	.option('-D, --dsl <dsl_file>', 'specify the dsl file to test')
+	.option('-O, --output <output_file>', 'specify the output file')
+	
+ program
+	.command('generate')
+	.description('generate a parser from a grammar file')
+	.action(function(){
+		if(program.grammar && program.output){
+			printHelpTitle();
+			console.log('');
+			console.log('generating parser into ' + program.output + ' ...');
+			if(generateParser(program.grammar, program.output)) {
+				console.log('well done! Maaperture parser file saved: ' + program.output);
+			}else{
+				console.log('parser generator error...');
+			}	
+		}else{
+			printHelpTitle();
+			program.help();
+		}
+	});
+	
+program
+	.command('test')
+	.description('test a parser against a dsl file')
+	.action(function(){
+		if(program.parser && program.dsl && program.output){
+			printHelpTitle();
+			console.log('');
+			console.log('testing parser ' + program.parser + ' against ' + program.dsl + ' ...');
+			if(testParser(program.parser, program.dsl, program.output)) {
+				console.log('well done! testing results saved: ' + program.output);
+			}else{
+				console.log('test error...');
+			}
+		}else{
+			printHelpTitle();
+			program.help();
+		}
+	});
+	
+program.on('--help', function(){
+  console.log('  Examples:');
+  console.log('');
+  console.log('    $ mpg generate -G maaperture_dsl_grammar.js -O DSLParser.js');
+  console.log('    $ mpg test -P DSLParser.js -D example.dsl -O result.json');
+  console.log('');
+});
+
+program.unknownOption = function(){
+	printHelpTitle();
+	program.help();
+}
+
+program.on('*', function(){
+	printHelpTitle();
+	program.help();
+});
+
+program
+	.parse(process.argv);
+	
+if (process.argv.length === 3) {
+	printHelpTitle();
+	program.help();
+}

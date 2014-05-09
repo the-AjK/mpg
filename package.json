@@ -1,0 +1,33 @@
+{
+  "name"         : "mpg",
+  "version"      : "1.0.2",
+  "description"  : "Maaperture Parser Generator",
+  "license" 	 : "BSD-3-Clause",
+  "author": {
+	"name" : "Alberto Garbui",
+	"email" : "alberto.garbui@gmail.com",
+	"url" : "http://ajk.altervista.org"
+  },
+  "repository": {
+	"type" : "git",
+    "url": "https://github.com/the-AjK/mpg.git"
+  },
+  "bugs": {
+	"url" : "https://github.com/the-AjK/mpg/issues",
+	"email" : "alberto.garbui@gmail.com"
+  },
+  "keywords": [
+    "mpg",
+	"parser",
+	"maaperture",
+	"ajk",
+	"jk"
+  ],
+  "bin": {
+    "mpg": "./bin/mpg"
+  },
+  "dependencies" : {
+   	"pegjs" : "latest",
+	"commander" : "latest"
+  }
+}
