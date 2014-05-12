@@ -135,7 +135,7 @@ program.on('*', function(){
 program
 	.parse(process.argv);
 	
-if (process.argv.length === 3) {
+if (process.argv.length < 5) {
 	printHelpTitle();
 	program.help();
 }
