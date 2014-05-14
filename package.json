@@ -1,6 +1,6 @@
 {
   "name"         : "mpg",
-  "version"      : "1.0.3",
+  "version"      : "1.0.4",
   "description"  : "Maaperture Parser Generator",
   "license" 	 : "BSD-3-Clause",
   "author": {
