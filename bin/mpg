@@ -5,7 +5,7 @@
 var fs = require('fs');     
 var PEG = require('pegjs'); 
 var program = require('commander');
-var config = require(__dirname + '/../config');
+var config = require('../config').config;
 var version = JSON.parse(fs.readFileSync(__dirname + '/../package.json', 'utf8')).version;
 var name = "mpg v" + version;
 var description = "Maaperture parser generator - Alberto Garbui (aka JK)";
@@ -23,9 +23,12 @@ var generateParser = function(grammar_file, output_parser_file) {
 	
 	var grammaticaDSL = fs.readFileSync(grammar_file).toString();
 	
-	var parser = PEG.buildParser(grammaticaDSL, { 					//grammar (string)
-								 output: 'source', //"config.pegjs.output,		//output type
-								 optimize: 'speed' //'config.pegjs.optimize,	//optimization type
+	var parser = PEG.buildParser(	grammaticaDSL, { 					//grammar (string)
+									cache: config.pegjs.cache,			//pegjs config (see config.js)
+									//allowedStartRules: config.pegjs.allowedStartRules,
+									output: config.pegjs.output,
+									optimize: config.pegjs.optimize,
+									plugins: config.pegjs.plugins
 								});	
 								
 	parser = "module.exports = " + parser + ";";
@@ -33,39 +36,55 @@ var generateParser = function(grammar_file, output_parser_file) {
 	var result;
 	try{
 		result = fs.writeFileSync(output_parser_file, parser, 'utf-8');
+		console.log('well done! Maaperture parser file saved: ' + program.output);
 	}catch(err){
-		result = false;
+		console.error('error while writing: ' + output_parser_file);
+		throw err;
 	}
 	
-	if(result){
-		return false;
-	}else{
-		return true;
-	}
 }
 
 function testParser(parser_file, dsl_file, output_file) {
 
-	var parserTest = require(parser_file);
-	var DSLstring = fs.readFileSync(dsl_file).toString();
-	var result = parserTest.parse(DSLstring);
-	var result;
+	var workingDir = process.cwd();
+	
 	try{
-		result = fs.writeFileSync(output_file, result, 'utf-8');
+		var parserTest = require(workingDir + '/' + parser_file);
 	}catch(err){
-		result = false;
+		console.error('parser reading error!');
+		throw err; 
 	}
 	
-	if(result){
-		return false;
-	}else{
-		return true;
-	}
+	var DSLstring = fs.readFileSync(dsl_file).toString();
 
-	//console.log("Controllo se il risultato e' in formato JSON...");
-	//provo ad eseguire il parser JSON per controllare se l'output è in formato JSON
-	//var risultatoJSON = JSON.parse(result);
-	//console.log(risultatoJSON.pretty());
+	try {
+		var result = parserTest.parse(DSLstring);
+	} catch(err) {
+	  	console.error('parsing error!');
+		console.error('check your dsl file: ' + dsl_file);
+		throw err; 
+	}
+			
+	console.log('errors checking...');
+	//test se il risultato è in formato JSON
+	result = JSON.stringify(result, null, '\t');
+	try {
+		var risultatoJSON = JSON.parse(result);
+	} catch(err) {
+		console.error('parsing result error! [invalid_JSON]');
+		console.error('check maaperture dsl parser: ' + parser_file);
+		throw err; 
+	}
+			
+	//salvo su file
+	console.log('saving ' + output_file);
+	fs.writeFileSync(output_file, result, 'utf-8', function (err) {
+			if (err) {
+				console.log("error writing result file!");
+				throw err;
+			} 
+		}
+	);
 }
 
 program
@@ -84,11 +103,7 @@ program
 			printHelpTitle();
 			console.log('');
 			console.log('generating parser into ' + program.output + ' ...');
-			if(generateParser(program.grammar, program.output)) {
-				console.log('well done! Maaperture parser file saved: ' + program.output);
-			}else{
-				console.log('parser generator error...');
-			}	
+			generateParser(program.grammar, program.output);	
 		}else{
 			printHelpTitle();
 			program.help();
@@ -102,12 +117,8 @@ program
 		if(program.parser && program.dsl && program.output){
 			printHelpTitle();
 			console.log('');
-			console.log('testing parser ' + program.parser + ' against ' + program.dsl + ' ...');
-			if(testParser(program.parser, program.dsl, program.output)) {
-				console.log('well done! testing results saved: ' + program.output);
-			}else{
-				console.log('test error...');
-			}
+			//console.log('testing parser ' + program.parser + ' against ' + program.dsl + ' ...');
+			testParser(program.parser, program.dsl, program.output); 
 		}else{
 			printHelpTitle();
 			program.help();

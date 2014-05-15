@@ -20,7 +20,7 @@ var config = {
 		
 		//[allowedStartRules] Rules the parser will be allowed to start parsing from 
 		//(default: the first rule in the grammar).
-		allowedStartRules: 'start',
+		allowedStartRules: '',
 		
 		//[output] If set to "parser", the method will return generated parser object; if set to "source", 
 		//it will return parser source code as a string (default: "parser").
@@ -36,4 +36,4 @@ var config = {
 	}
 };
 
-module.exports.config = config;
+exports.config = config;
